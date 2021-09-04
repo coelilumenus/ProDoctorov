@@ -169,7 +169,7 @@ p {
 
 /* importance */
 
-.album-item__important {
+.album-item__importance {
     display: block;
     position: absolute;
     border-radius: 50%;
@@ -183,8 +183,7 @@ p {
     background-position: center;
 }
 
-.album-item__important.album-item__important-active,
-.album-item__important:hover {
+.album__item-active > .album-item__importance {
     background-image: url("../images/importance-star-active.svg");
 }
 
@@ -192,7 +191,7 @@ p {
 
 .tooltip {
     display: block;
-    position: absolute;
+    position: fixed;
     padding: 4px 8px;
     width: 150px;
     min-height: 10px;
@@ -201,6 +200,7 @@ p {
     line-height: 130%;
     font-size: 12px;
     border-radius: 5px;
+    z-index: 1050;
 }
 
 /* modal photo */
@@ -245,6 +245,11 @@ p {
     font-size: 64px;
     font-weight: 200;
     color: #fff;
+}
+
+/* services */
+.hide {
+    display: none;
 }
 
 /* media */
