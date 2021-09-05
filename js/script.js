@@ -312,17 +312,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
     /* main page */
     const catalog = document.querySelector('#catalog'),
-        important = document.querySelector('#important');
+        important = document.querySelector('#important'),
+        importantInner = document.querySelector('.header-menu__important');
 
     document.addEventListener('click', (e) => {
-        if (e.target === catalog) {
+        if (e.target === catalog && !catalog.classList.contains('header-menu__item-active')) {
             document.querySelector('.favorite__items').remove();
 
             catalog.classList.add('header-menu__item-active');
             important.classList.remove('header-menu__item-active');
-
+            
             showUsers();
-        } else if (e.target === important || e.target.classList.contains('header-menu__important')) {
+        } else if ((e.target === important || e.target === importantInner) && !important.classList.contains('header-menu__item-active')) {
             document.querySelector('.catalog__items').remove();
 
             important.classList.add('header-menu__item-active');
@@ -332,11 +333,15 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    function updateFavorites() {
-        if (document.querySelector('.favorite__items')) {
-            document.querySelector('.favorite__items').remove();
+    function updateFavorites() { 
+        try { // if catch any bugs document will be working anyway
+            if (document.querySelector('.favorite__items')) {
+                document.querySelector('.favorite__items').remove();
+                showFavorites();
+            }
+        } catch (error) {
+            return;
         }
-        showFavorites();
     }
 
     function showFavorites() {
