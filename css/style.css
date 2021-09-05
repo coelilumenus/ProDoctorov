@@ -146,23 +146,23 @@ p {
 
 /* album */
 
-.body__album-wrapper {
+.album-wrapper {
     display: flex;
     flex-wrap: wrap;
     padding: 32px 100px 0 192px;
     border-bottom: 1px solid #F5F5F5;
 }
 
-.body__album-item {
+.album-item {
     position: relative;
     width: 150px;
-    height: 150px;
+    min-height: 150px;
     margin-right: 42px;
     margin-bottom: 42px;
     cursor: pointer;
 }
 
-.body__album-item img {
+.album-item img {
     border-radius: 5px;
 }
 
@@ -186,6 +186,23 @@ p {
     background-image: url("../images/importance-star-active.svg");
 }
 
+/* favorite page */
+.album-wrapper__favorite {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 80px 100px 80px 192px;
+}
+
+.album-item__favorite-title {
+    display: block;
+    margin-top: 12px;
+    min-height: 87px;
+    height: auto;
+    font-size: 14px;
+    line-height: 150%;
+    color: #787878;
+}
+
 /* tooltip */
 
 .tooltip {
@@ -200,6 +217,71 @@ p {
     font-size: 12px;
     border-radius: 5px;
     z-index: 1050;
+}
+
+/* spinner */
+.spinner {
+    width: 100%;
+    height: 784px;
+    padding-top: 392px;
+    border-bottom: 1px solid #F5F5F5;
+}
+
+.spinner img {
+    display: block;
+    margin: 0 auto;
+}
+
+.spinner-small {
+    width: 100%;
+    height: 328px;
+    padding-top: 140px;
+    border-bottom: 1px solid #F5F5F5;
+}
+
+.spinner-small img {
+    display: block;
+    margin: 0 auto;
+}
+
+/* errors */
+.items__error {
+    display: block;
+    margin: 235px auto 0 auto;
+    text-align: center;
+}
+
+.items__error-small {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    padding: 65px 0;
+    text-align: center;
+    border-bottom: 1px solid #F5F5F5;
+}
+
+.error-wrapper {
+    padding-top: 10px;
+    margin: 0 24px;
+}
+
+.items__error img {
+    margin-bottom: 35px;
+    width: 264px;
+    height: 198px;
+}
+
+.items__error-title {
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 22px;
+    color: #1C1C1C;
+}
+
+.items__error-description {
+    font-weight: normal;
+    font-size: 18px;
 }
 
 /* modal photo */

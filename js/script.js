@@ -12,6 +12,58 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     /* services */
+    const storageWorker = {
+        // update list of important items
+        getKeys: () => {
+            if (localStorage.getItem('importantKeys')) {
+                return localStorage.getItem('importantKeys').split(',');
+            }
+        },
+
+        addItem: (itemId, arguments) => {
+            if (!localStorage.getItem('importantKeys')) {
+                localStorage.setItem('importantKeys', itemId);
+                localStorage.setItem(itemId, arguments);
+            } else {
+                const oldKeys = localStorage.getItem('importantKeys').split(',');
+                const newKeys = oldKeys.concat(itemId);
+                localStorage.setItem('importantKeys', newKeys);
+                localStorage.setItem(itemId, arguments);
+            }
+        },
+
+        deleteItem: (itemId) => {
+            const oldKeys = localStorage.getItem('importantKeys').split(',');
+            if (oldKeys.indexOf(itemId) !== -1) {
+                const newKeys = oldKeys.filter(item => item !== itemId);
+                localStorage.setItem('importantKeys', newKeys);
+                localStorage.removeItem(itemId);
+            }
+        }
+
+    };
+
+    function createSpinner(spinnerClass = 'spinner') {
+        const spinner = createNewDiv(spinnerClass);
+        spinner.innerHTML = `<img src="./images/spinner.gif" alt="spinner" width="48px" height="48px">`;
+        return spinner;
+    }
+
+    function createError(
+        errorClass = 'items__error',
+        url = './images/error.png',
+        title = 'Сервер не отвечает',
+        description = 'Уже работаем над этим'
+        ) {
+            const error = createNewDiv(errorClass);
+            error.innerHTML = ` <img src="${url}" alt="Eror" width="264px" height="198px">
+                                        <div class="error-wrapper">
+                                            <h2 class="items__error-title">${title}</h2>
+                                            <p class="items__error-description">${description}</p>
+                                        </div>`;
+            return error;
+    }
+
     function createNewDiv(...classes) {
         const div = document.createElement('div');
         classes.forEach(item => div.classList.add(item));
@@ -48,21 +100,9 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                document.querySelector('#root').append(item);
+                document.querySelector('.catalog__items').append(item);
             }
         }
-    }
-
-    function showUsers() {
-        getResource('https://json.medrating.org/users/')
-            .then(data => {
-                data.forEach(({
-                    id,
-                    name
-                }) => {
-                    new User(id, name).createItem();
-                });
-            });
     }
 
     /* album */
@@ -82,8 +122,7 @@ window.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', () => {
                 if (!item.classList.contains('body__item-active')) {
                     item.classList.add('body__item-active');
-                    createAlbumWrapper(this.albumId, this.parentUser);
-                    showPhotos(this.albumId);
+                    showPhotos(this.albumId, this.parentUser);
                 } else {
                     item.classList.remove('body__item-active');
                     hideElements('data-parentAlbum', this.albumId);
@@ -93,17 +132,12 @@ window.addEventListener('DOMContentLoaded', () => {
             document.querySelector(`[data-userId="${this.parentUser}"]`).after(item);
         }
     }
-    
-    /* creating wrapper before showing photos */
-    function createAlbumWrapper(parentAlbum, parentUser) {
-        const albumWrapper = createNewDiv('body__album-wrapper');
-        albumWrapper.setAttribute('data-parentAlbum', parentAlbum);
-        albumWrapper.setAttribute('data-parentUser', parentUser);
-        
-        document.querySelector(`[data-albumId="${parentAlbum}"]`).after(albumWrapper);
-    }
 
     function showAlbums(parentUser) {
+        const spiner = createSpinner('spinner-small');
+        spiner.setAttribute('data-parentUser', parentUser);
+        document.querySelector(`[data-userId="${parentUser}"]`).after(spiner);
+
         getResource(`https://json.medrating.org/albums?userId=${parentUser}`)
             .then(data => {
                 data.forEach(({
@@ -112,7 +146,13 @@ window.addEventListener('DOMContentLoaded', () => {
                 }) => {
                     new Album(id, title, parentUser).createItem();
                 });
-            });
+            })
+            .catch(() => {
+                const error = createError('items__error-small');
+                error.setAttribute('data-parentUser', parentUser);
+                document.querySelector(`[data-userId="${parentUser}"]`).after(error);
+            })
+            .finally(() => document.querySelector('.spinner-small').remove());
     }
 
     /* photos */
@@ -125,12 +165,16 @@ window.addEventListener('DOMContentLoaded', () => {
             this.parentAlbum = parent;
         }
 
-        createItem() {
+        createItem(isFavorite = false) {
             /* creating photos */
-            const photo = createNewDiv('body__album-item');
+            const photo = createNewDiv('album-item');
             photo.setAttribute('data-photoId', this.photoId);
             photo.innerHTML += `<img src="${this.thumbnailUrl}" alt="${this.photoTitle}" width="150px" height="150px">`;
-            
+
+            if (isFavorite) {
+                photo.innerHTML += `<p class="album-item__favorite-title">${this.photoTitle}</p>`;
+            }
+
             /* size photo functional */
             photo.addEventListener('click', (e) => {
                 const target = e.target;
@@ -138,51 +182,58 @@ window.addEventListener('DOMContentLoaded', () => {
                     sizePhoto(this.url, this.photoTitle);
                 }
             });
-            
+
             /* tooltip functional */
-            const tooltip = createNewDiv('tooltip', 'hide');
-            tooltip.innerText = `${this.photoTitle}`;
-            photo.append(tooltip);
-            
-            showTooltip(photo, tooltip);
-            
+            if (!isFavorite) {
+                const tooltip = createNewDiv('tooltip', 'hide');
+                tooltip.innerText = `${this.photoTitle}`;
+                photo.append(tooltip);
+
+                showTooltip(photo, tooltip);
+            }
+
             /* creating importance-element */
             const photoImportance = createNewDiv('album-item__importance');
 
             photoImportance.addEventListener('click', () => {
                 if (!localStorage.getItem(`${this.photoId}`)) {
-                    localStorage.setItem(`${this.photoId}`, [this.parentAlbum, this.url, this.thumbnailUrl, this.photoTitle, this.photoId]);
+                    storageWorker.addItem(`${this.photoId}`, [this.photoId, this.photoTitle, this.thumbnailUrl, this.url, this.parentAlbum]);
                 } else {
-                    localStorage.removeItem(`${this.photoId}`);
+                    storageWorker.deleteItem(`${this.photoId}`);
                     photo.classList.remove('album__item-active');
+                    updateFavorites(); // optionally. If we want to update favorites immediately - use this function here
                 }
-
                 showImportance();
             });
-            
+
             photo.append(photoImportance);
-            
+            showImportance();
+
             /* add photos to wrapper */
-            document.querySelector(`[data-parentAlbum="${this.parentAlbum}"]`).append(photo);
+            if (!isFavorite) {
+                document.querySelector(`[data-parentAlbum="${this.parentAlbum}"]`).append(photo);
+            } else {
+                document.querySelector('.album-wrapper__favorite').append(photo);
+            }
         }
     }
-    
+
     function showTooltip(parent, item) {
         parent.addEventListener('mouseover', (e) => {
             if (!e.target.classList.contains('album-item__importance')) {
                 item.classList.remove('hide');
             }
         });
-        
+
         parent.addEventListener('mouseout', (e) => {
             if (!e.target.classList.contains('album-item__importance')) {
                 item.classList.add('hide');
             }
         });
-        
+
         parent.addEventListener('mousemove', (e) => {
             if (!e.target.classList.contains('album-item__importance')) {
-                item.style.cssText = `top: ${e.clientY + 30}px; left: ${e.clientX - 70}px`; 
+                item.style.cssText = `top: ${e.clientY + 30}px; left: ${e.clientX - 70}px`;
             }
         });
     }
@@ -191,9 +242,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const modal = createNewDiv('modal');
         modal.innerHTML = ` <div class="modal-close"></div>  
                             <div class="modal-content">   
-                                <img src="${url}" alt="${title}">    
+                                <img src="${url}" alt="${title}"> 
                             </div>`;
-
         document.querySelector('#root').append(modal);
         document.body.style.overflow = 'hidden';
 
@@ -203,7 +253,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 document.querySelector('.modal').remove();
             }
         });
-        
+
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Escape' && document.querySelector('.modal')) {
                 document.body.style.overflow = '';
@@ -213,7 +263,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function showImportance() {
-        const photos = document.querySelectorAll('.body__album-item');
+        const photos = document.querySelectorAll('.album-item');
         photos.forEach(item => {
             if (localStorage.getItem(item.getAttribute('data-photoId'))) {
                 item.classList.add('album__item-active');
@@ -221,46 +271,117 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function showPhotos(parentAlbum) {
+    /* creating wrapper before showing photos */
+    function createAlbumWrapper(parentAlbum, parentUser) {
+        const wrapper = createNewDiv('album-wrapper');
+        wrapper.setAttribute('data-parentAlbum', parentAlbum);
+        wrapper.setAttribute('data-parentUser', parentUser);
+
+        document.querySelector(`[data-albumId="${parentAlbum}"]`).after(wrapper);
+    }
+
+    function showPhotos(parentAlbum, parentUser) {
+        const spiner = createSpinner('spinner-small');
+        spiner.setAttribute('data-parentAlbum', parentAlbum);
+        spiner.setAttribute('data-parentUser', parentUser);
+        document.querySelector(`[data-albumId="${parentAlbum}"]`).after(spiner);
+
         getResource(`https://json.medrating.org/photos?albumId=${parentAlbum}`)
             .then(data => {
+                createAlbumWrapper(parentAlbum, parentUser);
                 data.forEach(({
                     id,
                     title,
                     thumbnailUrl,
                     url
                 }) => {
-                    new Photo(id, title, thumbnailUrl, url, parentAlbum).createItem();
+                    new Photo(id, title, thumbnailUrl, url, parentAlbum).createItem(false);
                 });
             })
             .then(() => {
                 showImportance();
-            });
+            })
+            .catch(() => {
+                const error = createError('items__error-small');
+                error.setAttribute('data-parentAlbum', parentAlbum);
+                error.setAttribute('data-parentUser', parentUser);
+                document.querySelector(`[data-albumId="${parentAlbum}"]`).after(error);
+            })
+            .finally(() => document.querySelector('.spinner-small').remove());
     }
 
     /* main page */
     const catalog = document.querySelector('#catalog'),
-          important = document.querySelector('#important');
-    
+        important = document.querySelector('#important');
+
     document.addEventListener('click', (e) => {
         if (e.target === catalog) {
+            document.querySelector('.favorite__items').remove();
+
             catalog.classList.add('header-menu__item-active');
             important.classList.remove('header-menu__item-active');
-            
+
             showUsers();
         } else if (e.target === important || e.target.classList.contains('header-menu__important')) {
-            document.querySelectorAll('.body__item').forEach(item => item.remove());
-            
+            document.querySelector('.catalog__items').remove();
+
             important.classList.add('header-menu__item-active');
             catalog.classList.remove('header-menu__item-active');
-            
-            showFavorite();
+
+            showFavorites();
         }
     });
     
-    showUsers();
-    
-    if (catalog.classList.contains('header-menu__item-active')) {
-
+    function updateFavorites() {
+        if (document.querySelector('.favorite__items')) {
+            document.querySelector('.favorite__items').remove();
+        }
+        showFavorites();
     }
+
+    function showFavorites() {
+        const wrapper = createNewDiv('favorite__items');
+        document.querySelector('#root').append(wrapper);
+
+        if (storageWorker.getKeys() !== undefined) {
+            wrapper.classList.add('album-wrapper__favorite');
+            storageWorker.getKeys().forEach(itemId => {
+                const item = localStorage.getItem(itemId).split(',');
+                new Photo(item[0], item[1], item[2], item[3], item[4]).createItem(true);
+                showImportance();
+            });
+        } else {
+            const error = createError(
+                'items__error', 
+                './images/empty.png', 
+                'Список избранного пуст', 
+                'Добавляйте изображения, нажимая на звёздочки'
+            );
+            document.querySelector('.favorite__items').append(error);
+        }
+    }
+
+    function showUsers() {
+        const wrapper = createNewDiv('catalog__items'),
+            spinner = createSpinner();
+        document.querySelector('#root').append(wrapper);
+        document.querySelector('#root').append(spinner);
+
+        getResource('https://json.medrating.org/users/')
+            .then(data => {
+                data.forEach(({
+                    id,
+                    name
+                }) => {
+                    new User(id, name).createItem();
+                });
+            })
+            .catch(() => {
+                const error = createError();
+                document.querySelector('.catalog__items').append(error);
+            })
+            .finally(() => document.querySelector('.spinner').remove());
+    }
+
+    showUsers();
 });
