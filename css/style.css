@@ -68,8 +68,7 @@ p {
     background-color: #fff;
 }
 
-.header-menu__item-active .header-menu__important::before,
-.header-menu__item:hover .header-menu__important::before {
+.header-menu__item-active .header-menu__important::before {
     background: url("../images/icon-star-active.svg") no-repeat center;
 }
 
