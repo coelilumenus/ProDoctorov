@@ -23,8 +23,8 @@ window.addEventListener('DOMContentLoaded', () => {
             favoriteWrapper._setAttribute('data-favoritePage', '1');
             favoriteWrapper._render('#root');
 
-            createFavoritePhotos();
-            listenFavoriteActivity();
+        createFavoritePhotos();
+        listenFavoriteActivity();
     }
     
     function listenHeaderActivity() {

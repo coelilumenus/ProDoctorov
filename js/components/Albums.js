@@ -1,10 +1,8 @@
 import getResource from '../services/fetchAPI.js';
-import ServiceComponents from '../services/serviceComponents.js';
+import {serviceComponents} from '../services/serviceComponents.js';
 import templates from '../markup/templates.js';
 import AbstractElement from '../abstract/abstractElement.js';
 import {createPhotosAlbum, createPhotosWrapper, destroyPhotosAlbum} from './Photos.js';
-
-const serviceComponents = new ServiceComponents();
 
 function createUserAlbums(userId) {
     const parentUser = document.querySelector(`[data-userId="${userId}"]`);
