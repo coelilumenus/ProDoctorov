@@ -1,7 +1,7 @@
 "use strict";
 import AbstractElement from './abstract/abstractElement.js';
 import { createUsers } from './components/Users.js';
-import { createFavoritePhotos } from './components/Photos.js';
+import { createPhotosFavorite } from './components/Photos.js';
 
 window.addEventListener('DOMContentLoaded', () => {
     
@@ -23,7 +23,7 @@ window.addEventListener('DOMContentLoaded', () => {
             favoriteWrapper._setAttribute('data-favoritePage', '1');
             favoriteWrapper._render('#root');
 
-        createFavoritePhotos();
+        createPhotosFavorite();
         listenFavoriteActivity();
     }
     

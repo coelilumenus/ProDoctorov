@@ -2,7 +2,7 @@ import getResource from '../services/fetchAPI.js';
 import {serviceComponents} from '../services/serviceComponents.js';
 import templates from '../markup/templates.js';
 import AbstractElement from '../abstract/abstractElement.js';
-import {createPhotosAlbum, createPhotosWrapper, destroyPhotosAlbum} from './Photos.js';
+import {createPhotosAlbum, destroyPhotosAlbum} from './Photos.js';
 
 function createUserAlbums(userId) {
     const parentUser = document.querySelector(`[data-userId="${userId}"]`);
@@ -37,6 +37,14 @@ function createUserAlbums(userId) {
                 serviceComponents.destroySpinner('albums');
             });   
     }
+}
+
+function createPhotosWrapper(parentAlbum, parentUser) {
+    const wrapper = new AbstractElement();
+    wrapper._setClasses('album-wrapper');
+    wrapper._setAttribute('data-parentAlbum', parentAlbum);
+    wrapper._setAttribute('data-parentUser', parentUser);
+    wrapper._render(`[data-albumId="${parentAlbum}"]`, 'after');
 }
 
 function destroyUserAlbums(userId) {
