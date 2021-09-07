@@ -6,6 +6,7 @@ import StorageWorker from '../services/storageWorker.js';
 
 const storageWorker = new StorageWorker('importantPhotos');
 
+/* Используется для рендера фото на странице пользователей */
 function createPhotosAlbum(albumId, parentUserId) {
     const parentAlbum = document.querySelector(`[data-albumId="${albumId}"]`);
     
@@ -43,22 +44,26 @@ function createPhotosAlbum(albumId, parentUserId) {
     }
 }  
 
+/* Используется для  рендера фото на странице избранного */
 function createFavoritePhotos() {
     if (storageWorker.getKeys() !== undefined) {
+        
         storageWorker.getKeys().forEach(itemId => {
-            const itemArr = localStorage.getItem(itemId).split(',');
-            document.querySelector('[data-favoritePage="1"]').classList.add('album-wrapper__favorite');
+            const [photoId, title, thumbnailUrl, url, albumId] =  localStorage.getItem(itemId).split(',');
             
             const photo = new AbstractElement();
             photo._setClasses('album-item');
-            photo._setAttribute('data-photoId', itemArr[0]);
-            photo._template(templates.favoritePhoto(itemArr[2], itemArr[1]));
+            photo._setAttribute('data-photoId', photoId);
+            photo._template(templates.favoritePhoto(thumbnailUrl, title));
             
             photo._render(`[data-favoritePage="1"]`);
-            addModal(`[data-photoId="${itemArr[0]}"]`, templates.sizedPhoto(itemArr[3], itemArr[1]), 'album-item__importance');
-            updateFavorites(`[data-photoId="${itemArr[0]}"]`, itemArr[0], itemArr[1], itemArr[2], itemArr[3], itemArr[4]);
+            addModal(`[data-photoId="${photoId}"]`, templates.sizedPhoto(url, title), 'album-item__importance');
+            updateFavorites(`[data-photoId="${photoId}"]`, photoId, title, thumbnailUrl, url, albumId);
         });
+        
+        document.querySelector('[data-favoritePage="1"]').classList.add('album-wrapper__favorite');
         showImportance();
+        
     } else {
         const error = serviceComponents.createError('favoritePage', './images/empty.png', 'empty', 'Список избранного пуст', 'Добавляйте изображения, нажимая на звёздочки');
         document.querySelector('[data-favoritePage="1"]').append(error); 
@@ -98,6 +103,7 @@ function updateFavorites(selector, id, title, thumbnailUrl, url, albumId) {
 function addModal(selector, template, exceptionClass) {
     const modal = new AbstractElement();
     modal._setClasses('modal', 'hide');
+    modal._setAttribute('data-modal', 'modal');
     modal._template(template);
     
     modal._render(selector);
@@ -142,7 +148,8 @@ function addTooltip(selector, template, exceptionClass) {
         }
     });
     parent.addEventListener('mousemove', (e) => {
-        if (!e.target.classList.contains(exceptionClass)) {
+        /* В templates также расставлены аттрибуты 'data-modal' */
+        if (!e.target.classList.contains(exceptionClass) && !e.target.getAttribute('data-modal')) {
             parentTooltip.style.cssText = `top: ${e.clientY + 30}px; left: ${e.clientX - 70}px`;
         }
     });

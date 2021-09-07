@@ -51,7 +51,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // отвечает за обновление страницы избранного, после нажатия на звёздочку
+    /* Отвечает за обновление страницы избранного после клика на звёздочку */
     function listenFavoriteActivity() {
         document.querySelector('.favorite__items').addEventListener('click', (e) => {
             if (e.target.classList.contains('album-item__importance')) {

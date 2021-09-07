@@ -16,9 +16,9 @@ const templates = {
     favoritePhoto: (thumbnailUrl, photoTitle) => `<img src="${thumbnailUrl}" alt="${photoTitle}" width="150px" height="150px"></img><p class="album-item__favorite-title">${photoTitle}</p>`,
     
     sizedPhoto: (url, title) => {
-        return (` <div class="modal-close"></div>  
-                  <div class="modal-content">   
-                    <img src="${url}" alt="${title}"> 
+        return (` <div data-modal="close" class="modal-close"></div>  
+                  <div data-modal="content" class="modal-content">   
+                    <img data-modal="img" src="${url}" alt="${title}"> 
                   </div>`);
     },
     
