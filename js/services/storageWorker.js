@@ -1,4 +1,4 @@
-export default class StateWorker {
+export default class StorageWorker {
     constructor(storageKey) {
         this.key = storageKey;
     }
@@ -9,7 +9,7 @@ export default class StateWorker {
         }
     }
 
-    setItem (itemId, args) {
+    addItem (itemId, args) {
         if (!localStorage.getItem(this.key)) {
             localStorage.setItem(this.key, itemId);
             localStorage.setItem(itemId, args);
@@ -21,7 +21,7 @@ export default class StateWorker {
         }
     }
 
-    removeItem (itemId) {
+    deleteItem (itemId) {
         const oldKeys = localStorage.getItem(this.key).split(',');
         if (oldKeys.indexOf(itemId) !== -1) {
             const newKeys = oldKeys.filter(item => item !== itemId);

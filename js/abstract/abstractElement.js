@@ -18,7 +18,7 @@ export default class AbstractElement {
     }
     
     _setListener(type, callback, ...params) {
-        this.element.addEventListener(type, () => callback(...params));
+        this.element.addEventListener(type, (e) => callback(...params, e));
     }
     
     _setActivityListener(activityClass) {

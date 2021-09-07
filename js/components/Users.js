@@ -7,6 +7,9 @@ import { createUserAlbums, destroyUserAlbums } from './Albums.js';
 const serviceComponents = new ServiceComponents();
 
 function createUsers() {
+    const spinner = serviceComponents.createSpinner('main');
+    document.querySelector('#root').append(spinner);    
+    
     getResource('https://json.medrating.org/users/')
     .then(data => {
             data.forEach(({ id, name }) => {
@@ -15,12 +18,21 @@ function createUsers() {
                     user._setClasses('body__item');
                     user._setAttribute('data-userId', id);
                     user._template(templates.bodyTitle(name));
+                    
                     user._setActivityListener('body__item-active', id);
                     user._setListener('click', createUserAlbums, id);
                     user._setListener('click', destroyUserAlbums, id);
-                    user._render('#root');
+                    
+                    user._render('[data-userPage="1"]');
                 }
             });
+    })
+    .catch(() => {
+        const error = serviceComponents.createError('main');
+        document.querySelector('#root').append(error); 
+    })
+    .finally(() => {
+        serviceComponents.destroySpinner('main');
     });   
 }
 

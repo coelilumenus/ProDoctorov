@@ -182,7 +182,8 @@ p {
     background-position: center;
 }
 
-.album__item-active > .album-item__importance {
+.album__item-active > .album-item__importance,
+.album-item__importance-active.album-item__importance {
     background-image: url("../images/importance-star-active.svg");
 }
 
