@@ -5,26 +5,42 @@ import { createPhotosFavorite } from './components/Photos.js';
 
 window.addEventListener('DOMContentLoaded', () => {
     
-    showUserPage();
-    listenHeaderActivity();
-    
-    function showUserPage() {
-        const userWrapper = new AbstractElement();
-            userWrapper._setClasses('catalog__items');
-            userWrapper._setAttribute('data-userPage', '1');
-            userWrapper._render('#root');
-        
+    renderUserPage();
+
+    function renderUserPage() {
+        createUserWrapper();
         createUsers();
+        listenHeaderActivity();
     }
     
-    function showFavoritePage() {
-        const favoriteWrapper = new AbstractElement();
-            favoriteWrapper._setClasses('favorite__items');
-            favoriteWrapper._setAttribute('data-favoritePage', '1');
-            favoriteWrapper._render('#root');
-
+    function renderFavoritePage() {
+        createFavoriteWrapper();
         createPhotosFavorite();
         listenFavoriteActivity();
+    }
+    
+    function createUserWrapper() {
+        const userWrapper = new AbstractElement();
+        userWrapper._setClasses('catalog__items');
+        userWrapper._setAttribute('data-userPage', '1');
+        userWrapper._render('#root');
+    }
+    
+    function createFavoriteWrapper() {
+        const favoriteWrapper = new AbstractElement();
+        favoriteWrapper._setClasses('favorite__items');
+        favoriteWrapper._setAttribute('data-favoritePage', '1');
+        favoriteWrapper._render('#root');
+    }
+    
+    /* Отвечает за обновление страницы избранного после клика на звёздочку */
+    function listenFavoriteActivity() {
+        document.querySelector('.favorite__items').addEventListener('click', (e) => {
+            if (e.target.classList.contains('album-item__importance')) {
+                document.querySelector('.favorite__items').remove();                      
+                renderFavoritePage();
+            }
+        });
     }
     
     function listenHeaderActivity() {
@@ -39,24 +55,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 catalog.classList.add('header-menu__item-active');
                 important.classList.remove('header-menu__item-active');
                 
-                showUserPage();
+                renderUserPage();
             } else if ((e.target === important || e.target === importantInner) && !important.classList.contains('header-menu__item-active')) {
                 document.querySelector('.catalog__items').remove();
     
                 important.classList.add('header-menu__item-active');
                 catalog.classList.remove('header-menu__item-active');
                 
-                showFavoritePage();
-            }
-        });
-    }
-    
-    /* Отвечает за обновление страницы избранного после клика на звёздочку */
-    function listenFavoriteActivity() {
-        document.querySelector('.favorite__items').addEventListener('click', (e) => {
-            if (e.target.classList.contains('album-item__importance')) {
-                document.querySelector('.favorite__items').remove();                      
-                showFavoritePage();
+                renderFavoritePage();
             }
         });
     }

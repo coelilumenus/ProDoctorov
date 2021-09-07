@@ -13,6 +13,7 @@ const templates = {
     bodyTitle: (text) => `<p class="body__item-text">${text}</p>`,
     
     photo: (thumbnailUrl, photoTitle) => `<img src="${thumbnailUrl}" alt="${photoTitle}" width="150px" height="150px"></img>`,
+    
     favoritePhoto: (thumbnailUrl, photoTitle) => `<img src="${thumbnailUrl}" alt="${photoTitle}" width="150px" height="150px"></img><p class="album-item__favorite-title">${photoTitle}</p>`,
     
     sizedPhoto: (url, title) => {
