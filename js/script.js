@@ -1,7 +1,7 @@
 "use strict";
 import AbstractElement from './abstract/abstractElement.js';
-import { createUsers } from './components/Users.js';
-import { createPhotosFavorite } from './components/Photos.js';
+import { renderUsers } from './components/Users.js';
+import { renderPhotosToFavorite } from './components/Photos.js';
 
 window.addEventListener('DOMContentLoaded', () => {
     
@@ -9,13 +9,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     function renderUserPage() {
         createUserWrapper();
-        createUsers();
+        renderUsers();
         listenHeaderActivity();
     }
     
     function renderFavoritePage() {
         createFavoriteWrapper();
-        createPhotosFavorite();
+        renderPhotosToFavorite();
         listenFavoriteActivity();
     }
     
@@ -46,21 +46,22 @@ window.addEventListener('DOMContentLoaded', () => {
     function listenHeaderActivity() {
         const catalog = document.querySelector('#catalog'),
             important = document.querySelector('#important'),
-            importantInner = document.querySelector('.header-menu__important');
+            importantInner = document.querySelector('.header-menu__important'),
+            activeClass = 'header-menu__item-active';
         
         document.addEventListener('click', (e) => {
-            if (e.target === catalog && !catalog.classList.contains('header-menu__item-active')) {
+            if (e.target === catalog && !catalog.classList.contains(activeClass)) {
                 document.querySelector('.favorite__items').remove();
     
-                catalog.classList.add('header-menu__item-active');
-                important.classList.remove('header-menu__item-active');
+                catalog.classList.add(activeClass);
+                important.classList.remove(activeClass);
                 
                 renderUserPage();
-            } else if ((e.target === important || e.target === importantInner) && !important.classList.contains('header-menu__item-active')) {
+            } else if ((e.target === important || e.target === importantInner) && !important.classList.contains(activeClass)) {
                 document.querySelector('.catalog__items').remove();
     
-                important.classList.add('header-menu__item-active');
-                catalog.classList.remove('header-menu__item-active');
+                important.classList.add(activeClass);
+                catalog.classList.remove(activeClass);
                 
                 renderFavoritePage();
             }

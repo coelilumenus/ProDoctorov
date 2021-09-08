@@ -1,41 +1,59 @@
-import getResource from '../services/fetchAPI.js';
-import {serviceComponents} from '../services/serviceComponents.js';
+import {fetchData} from '../services/fetchAPI.js';
+import ServiceComponents from '../services/serviceComponents.js';
 import templates from '../markup/templates.js';
 import AbstractElement from '../abstract/abstractElement.js';
-import {createPhotosAlbum, destroyPhotosAlbum} from './Photos.js';
+import {renderPhotosToAlbum, destroyPhotosAlbum} from './Photos.js';
 
-function createUserAlbums(userId) {
-    const parentUser = document.querySelector(`[data-userId="${userId}"]`);
+const service = new ServiceComponents();
+
+function renderUserAlbums(userId) {
+    const parentUserSelector = `[data-userId="${userId}"]`,
+        parentUser = document.querySelector(parentUserSelector),
+        activeClass = 'body__item-active';
     
-    if (parentUser.classList.contains('body__item-active')) {
-        const spinner = serviceComponents.createSmallSpinner('albums');
-        parentUser.after(spinner);  
+    if (parentUser.classList.contains(activeClass)) {
+        service.createSmallSpinner('albums')
+            ._render(parentUserSelector, 'after');
         
-        getResource(`https://json.medrating.org/albums?userId=${userId}`)
+        fetchData.albums(userId)
             .then(data => {
                 data.forEach(({ id, title }) => {
-                    const album = new AbstractElement();
-                    album._setClasses('body__item', 'body__item-small');
-                    album._setAttribute('data-albumId', id);
-                    album._setAttribute('data-parentUser', userId);
-                    album._template(templates.bodyTitle(title));
-                    
-                    album._setActivityListener('body__item-active');
-                    album._setListener('click', createPhotosWrapper, id, userId);
-                    album._setListener('click', createPhotosAlbum, id, userId);
-                    album._setListener('click', destroyPhotosAlbum, id);
-                    
-                    album._render(`[data-userid="${userId}"]`, 'after');
+                    createUserAlbums(id, userId, title);
                 });
             })
             .catch(() => {
-                const error = serviceComponents.createSmallError('albums');
-                error.setAttribute('data-parentUser', userId);
-                parentUser.after(error); 
+                const error = service.createSmallError('albums');
+                error._setAttribute('data-parentUser', userId);
+                error._render(parentUserSelector, 'after');
             })
             .finally(() => {
-                serviceComponents.destroySpinner('albums');
+                service.destroySpinner('albums');
             });   
+    }
+}
+
+function createUserAlbums(id, userId, title) {
+    const album = new AbstractElement();
+    album._setClasses('body__item', 'body__item-small');
+    album._setAttribute('data-albumId', id);
+    album._setAttribute('data-parentUser', userId);
+    album._template(templates.bodyTitle(title));
+    
+    album._setActivityListener('body__item-active');
+    album._setListener('click', createPhotosWrapper, id, userId);
+    album._setListener('click', renderPhotosToAlbum, id, userId);
+    album._setListener('click', destroyPhotosAlbum, id);
+    
+    album._render(`[data-userid="${userId}"]`, 'after');
+}
+
+function destroyUserAlbums(userId) {
+        const parentUserSelector = `[data-userId="${userId}"]`,
+        parentUser = document.querySelector(parentUserSelector),
+        activeClass = 'body__item-active';
+    
+    if (!parentUser.classList.contains(activeClass)) {
+        service.destroyElementsByDataId('data-parentUser', userId);
     }
 }
 
@@ -47,12 +65,4 @@ function createPhotosWrapper(parentAlbum, parentUser) {
     wrapper._render(`[data-albumId="${parentAlbum}"]`, 'after');
 }
 
-function destroyUserAlbums(userId) {
-    const parentUser = document.querySelector(`[data-userId="${userId}"]`);
-    
-    if (!parentUser.classList.contains('body__item-active')) {
-        serviceComponents.destroyElementsByDataId('data-parentUser', userId);
-    }
-}
-
-export {createUserAlbums, destroyUserAlbums};
+export {renderUserAlbums, destroyUserAlbums};

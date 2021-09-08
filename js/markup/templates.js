@@ -24,9 +24,6 @@ const templates = {
     },
     
     tooltip: (text) => `${text}`,
-
-    
-    
     
 };
 

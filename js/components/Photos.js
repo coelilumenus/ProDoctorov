@@ -1,62 +1,82 @@
-import getResource from '../services/fetchAPI.js';
-import {serviceComponents} from '../services/serviceComponents.js';
+import {fetchData} from '../services/fetchAPI.js';
+import ServiceComponents from '../services/serviceComponents.js';
 import templates from '../markup/templates.js';
 import AbstractElement from '../abstract/abstractElement.js';
 import StorageWorker from '../services/storageWorker.js';
 
 const storageWorker = new StorageWorker('importantPhotos');
+const service = new ServiceComponents();
 
-/* Используется для рендера фото на странице пользователей */
-function createPhotosAlbum(albumId, parentUserId) {
-    const parentAlbum = document.querySelector(`[data-albumId="${albumId}"]`);
-    
-    if (parentAlbum.classList.contains('body__item-active')) {
-        const spinner = serviceComponents.createSmallSpinner('photos');
-        parentAlbum.after(spinner);  
+function renderPhotosToAlbum(albumId, parentUserId) {
+    const parentAlbumSelector = `[data-albumId="${albumId}"]`,
+        parentAlbum = document.querySelector(parentAlbumSelector);
         
-        getResource(`https://json.medrating.org/photos?albumId=${albumId}`)
+    if (parentAlbum.classList.contains('body__item-active')) {
+        
+        service.createSmallSpinner('photos')
+            ._render(parentAlbumSelector, 'after');
+        
+        fetchData.photos(albumId)
             .then(data => {
                 data.forEach(({ id, title, thumbnailUrl, url }) => {
-                    createPhoto(id, templates.photo(thumbnailUrl, title), `[data-parentAlbum="${albumId}"]`);
-                    addTooltipFunctional(`[data-photoId="${id}"]`, templates.tooltip(title), 'album-item__importance');
-                    addModalFunctional(`[data-photoId="${id}"]`, templates.sizedPhoto(url, title), 'album-item__importance');
-                    addFavoriteElements(`[data-photoId="${id}"]`);
-                    listenUpdatingFavorites(`[data-photoId="${id}"]`, id, title, thumbnailUrl, url, albumId);
+                    const renderSelector = `[data-photoId="${id}"]`,
+                        parentAlbumSelector = `[data-parentAlbum="${albumId}"]`,
+                        photoTemplate = templates.photo(thumbnailUrl, title),
+                        exceptionClass = 'album-item__importance';
+                    
+                    createPhoto(id, photoTemplate, parentAlbumSelector);
+                    addTooltipFunctional(renderSelector, title, exceptionClass);
+                    addModalFunctional(renderSelector, url, title, exceptionClass);
+                    addFavoriteElements(renderSelector);
+                    listenUpdatingFavorites(renderSelector, id, title, thumbnailUrl, url, albumId);
                 });
             })
             .then(() => {
                 addActiveClassToFavorites();
             })
             .catch(() => {
-                const error = serviceComponents.createSmallError('photos');
-                error.setAttribute('data-parentAlbum', albumId);
-                error.setAttribute('data-parentUser', parentUserId);
-                parentAlbum.after(error); 
+                destroyParentAlbumWrapper(albumId);
+                const error = service.createSmallError('photos');
+                error._setAttribute('data-parentAlbum', albumId);
+                error._setAttribute('data-parentUser', parentUserId);
+                error._render(parentAlbumSelector, 'after');
             })
             .finally(() => {
-                serviceComponents.destroySpinner('photos');
+                service.destroySpinner('photos');
             }); 
     }
 }  
 
-/* Используется для  рендера фото на странице избранного */
-function createPhotosFavorite() {
-    if (storageWorker.getKeys() !== undefined) {
+function renderPhotosToFavorite() {
+    const wrapperSelector = '[data-favoritePage="1"]',
+        wrapper = document.querySelector(wrapperSelector);
     
-        storageWorker.getKeys().forEach(itemId => {
-            const [id, title, thumbnailUrl, url, albumId] =  localStorage.getItem(itemId).split(',');
-            createPhoto(id, templates.favoritePhoto(thumbnailUrl, title), '[data-favoritePage="1"]');
-            addModalFunctional(`[data-photoId="${id}"]`, templates.sizedPhoto(url, title), 'album-item__importance');
-            addFavoriteElements(`[data-photoId="${id}"]`);
-            listenUpdatingFavorites(`[data-photoId="${id}"]`, id, title, thumbnailUrl, url, albumId);
-        });
+    if (storageWorker.getKeys() !== undefined) {
         
-        document.querySelector('[data-favoritePage="1"]').classList.add('album-wrapper__favorite');
+        storageWorker.getKeys().forEach(itemId => {
+            const [id, title, thumbnailUrl, url, albumId] =  localStorage.getItem(itemId).split(','),
+                photoTemplate = templates.favoritePhoto(thumbnailUrl, title),
+                renderSelector = `[data-photoId="${id}"]`,
+                exceptionClass = 'album-item__importance';
+            
+            createPhoto(id, photoTemplate, wrapperSelector);
+            addModalFunctional(renderSelector, url, title, exceptionClass);
+            addFavoriteElements(renderSelector);
+            listenUpdatingFavorites(renderSelector, id, title, thumbnailUrl, url, albumId);
+        });
+
+        wrapper.classList.add('album-wrapper__favorite');
         addActiveClassToFavorites();
         
     } else {
-        const error = serviceComponents.createError('favoritePage', './images/empty.png', 'empty', 'Список избранного пуст', 'Добавляйте изображения, нажимая на звёздочки');
-        document.querySelector('[data-favoritePage="1"]').append(error); 
+        const errorId = 'favoritePage',
+            photoUrl = './images/empty.png',
+            alt = 'empty',
+            title = 'Список избранного пуст',
+            description = 'Добавляйте изображения, нажимая на звёздочки';
+        
+        service.createError(errorId, photoUrl, alt, title, description)
+            ._render(wrapperSelector);
     }
 }
 
@@ -69,13 +89,13 @@ function createPhoto(id, template, renderSelector) {
     photo._render(renderSelector);
 }
 
-function addFavoriteElements(selector) {
+function addFavoriteElements(renderSelector) {
     const importance = new AbstractElement();
     importance._setClasses('album-item__importance');
     
     importance._setActivityListener('album-item__importance-active');
     
-    importance._render(selector);
+    importance._render(renderSelector);
 }
 
 function listenUpdatingFavorites(selector, id, title, thumbnailUrl, url, albumId) {
@@ -101,15 +121,15 @@ function addActiveClassToFavorites() {
     });
 }
 
-function addModalFunctional(selector, template, exceptionClass) {
+function addModalFunctional(renderSelector, url, title, exceptionClass) {
     const modal = new AbstractElement();
     modal._setClasses('modal', 'hide');
     modal._setAttribute('data-modal', 'modal');
-    modal._template(template);
+    modal._template(templates.sizedPhoto(url, title));
     
-    modal._render(selector);
+    modal._render(renderSelector);
     
-    const parent = document.querySelector(selector),
+    const parent = document.querySelector(renderSelector),
         parentModal = parent.querySelector('.modal');
 
     parent.addEventListener('click', (e) => {
@@ -128,14 +148,14 @@ function addModalFunctional(selector, template, exceptionClass) {
     });
 }
 
-function addTooltipFunctional(selector, template, exceptionClass) {
+function addTooltipFunctional(renderSelector, title, exceptionClass) {
     const tooltip = new AbstractElement();
     tooltip._setClasses('tooltip', 'hide');
-    tooltip._template(template);
+    tooltip._template(templates.tooltip(title));
     
-    tooltip._render(selector);
+    tooltip._render(renderSelector);
     
-    const parent = document.querySelector(selector),
+    const parent = document.querySelector(renderSelector),
           parentTooltip = parent.querySelector('.tooltip');
     
     parent.addEventListener('mouseover', (e) => {
@@ -160,9 +180,16 @@ function destroyPhotosAlbum(albumId) {
     const parentAlbum = document.querySelector(`[data-albumId="${albumId}"]`);
     
     if (!parentAlbum.classList.contains('body__item-active')) {
-        serviceComponents.destroyElementsByDataId('data-parentAlbum', albumId);
+        service.destroyElementsByDataId('data-parentAlbum', albumId);
     }
 }
 
-export {createPhotosAlbum, destroyPhotosAlbum, createPhotosFavorite};
+function destroyParentAlbumWrapper(albumId) {
+    const parentElementSelector = `[data-parentAlbum="${albumId}"]`,
+        parentElement = document.querySelector(parentElementSelector);
+    
+    parentElement.remove();
+}
+
+export {destroyPhotosAlbum, renderPhotosToAlbum, renderPhotosToFavorite};
     

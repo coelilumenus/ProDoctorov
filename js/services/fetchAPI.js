@@ -1,4 +1,4 @@
-export default async function getResource(url) {
+async function getResource(url) {
     let res = await fetch(url);
 
     if (!res.ok) {
@@ -7,3 +7,13 @@ export default async function getResource(url) {
 
     return await res.json();
 }
+
+const fetchData = {
+    users: () => getResource('https://json.medrating.org/users/'),
+    albums: (userId) => getResource(`https://json.medrating.org/albums?userId=${userId}`),
+    photos: (albumId) => getResource(`https://json.medrating.org/photos?albumId=${albumId}`)
+};
+
+ 
+
+export {fetchData};

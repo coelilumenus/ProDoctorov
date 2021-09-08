@@ -1,55 +1,53 @@
 import AbstractElement from '../abstract/abstractElement.js';
 import templates from '../markup/templates.js';
 
-const serviceComponents = {
+export default class ServiceComponents extends AbstractElement {
 
-    createSpinner: (spinnerId) => {
+    createSpinner(spinnerId) {
         const spinner = new AbstractElement();
         spinner._setClasses('spinner');
         spinner._template(templates.spinner());
         spinner._setAttribute('data-spinner', spinnerId);
-        return spinner.element;
-    },
+        return spinner;
+    }
 
-    createSmallSpinner: (spinnerId) => {
+    createSmallSpinner(spinnerId) {
         const spinner = new AbstractElement();
         spinner._setClasses('spinner-small');
         spinner._template(templates.spinner());
         spinner._setAttribute('data-spinner', spinnerId);
-        return spinner.element;
-    },
+        return spinner;
+    }
 
-    destroySpinner: (spinnerId) => {
+    destroySpinner(spinnerId) {
         document.querySelector(`[data-spinner="${spinnerId}"]`).remove();
-    },
+    }
 
-    createError: (errorId, photoUrl, alt, title, description) => {
+    createError(errorId, photoUrl, alt, title, description) {
         const error = new AbstractElement();
         error._setClasses('items__error');
         error._template(templates.error(photoUrl, alt, title, description));
         error._setAttribute('data-error', errorId);
-        return error.element;
-    },
+        return error;
+    }
 
-    createSmallError: (errorId, photoUrl, alt, title, description) => {
+    createSmallError(errorId, photoUrl, alt, title, description) {
         const error = new AbstractElement();
         error._setClasses('items__error-small');
         error._template(templates.error(photoUrl, alt, title, description));
         error._setAttribute('data-error', errorId);
-        return error.element;
-    },
+        return error;
+    }
 
-    destroyError: (errorId) => {
+    destroyError(errorId) {
         document.querySelector(`[data-error="${errorId}"]`).remove();
-    },
+    }
     
-    destroyElementsByDataId: (dataAttribute, itemId) => {
+    destroyElementsByDataId(dataAttribute, itemId) {
         const items = document.querySelectorAll(`[${dataAttribute}="${itemId}"]`);
         items.forEach(item => {
             item.remove();
         });
-    },
+    }
     
-};
-
-export {serviceComponents};
+}
